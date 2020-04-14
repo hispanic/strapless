@@ -1,0 +1,410 @@
+// color constants
+
+$complement: 180deg;
+$triadic-pair: 120deg;
+$accent: 45deg;
+$analog: 15deg;
+
+// color wheels
+
+$accented:        $complement,
+                  $accent,
+                  -$accent;
+
+$complementary:   $complement,
+                  $analog,
+                  $complement + $analog;
+
+$complementary-b: $complement,
+                  -$analog,
+                  $complement - $analog;
+
+$triadic:         -$triadic-pair,
+                  $triadic-pair,
+                  $analog;
+
+$triadic-b:       -$triadic-pair,
+                  $triadic-pair,
+                  -$analog;
+
+$tetradic:        $complement,
+                  $accent,
+                  $complement + $accent;
+
+$tetradic-b:      $complement,
+                  -$accent,
+                  $complement - $accent;
+
+$square:          $complement,
+                  -$complement/2,
+                  $complement/2;
+
+$ebb:             $complement + $analog,
+                  $analog,
+                  $accent;
+
+$flow:            $complement - $analog,
+                  -$analog,
+                  -$accent;
+
+$monochromatic:   $accent/2,
+                  $analog/2,
+                  -$analog/2;
+
+$monochromatic-b: -$accent/2,
+                  $analog/2,
+                  -$analog/2;
+
+@include make-palette($base-color, $base-color-wheel);
+
+.make-palette($color; $wheel) {
+  // make all variables for a color palette
+  @include set-scheme-type($color);
+  @include make-color1($color);
+  .make-color2($color; $wheel);
+  .make-color3($color; $wheel);
+  .make-color4($color; $wheel);
+  .make-subcolors($color1; $color2; $color3; $color4; $scheme-type);
+  .make-grays($color; $scheme-type);
+  @include make-semantic-colors();
+}
+
+.make-palette($color: $base-color; $wheel: $base-color-wheel) when (saturation($color) < 1.5%) {
+  // for grays, set up working color2, 3 and 4 and then reinforce gray color1
+  $standin-base: #D76224;
+  @include set-lumafix($standin-base);
+  .make-palette($lumafix; $wheel);
+  $color1: $base-color;
+  @include set-a-color($base-color);
+  @include set-b-color($base-color);
+  @include set-c-color($base-color);
+  $color1a: desaturate($a-color, 100% - saturation($color));
+  $color1b: desaturate($b-color, 100% - saturation($color));
+  $color1c: desaturate($c-color, 100% - saturation($color));
+  $warning: $warning-base;
+  $failure: $failure-base;
+  $info: $info-base;
+}
+
+@mixin set-scheme-type($color) {
+  // set $scheme-type to light, medium or dark
+
+  @mixin set-contrast-ratio-black() {
+    @include set-contrast-ratio($color, black);
+    $contrast-ratio-black: $contrast-ratio;
+  }
+
+  @mixin set-contrast-ratio-white() {
+    @include set-contrast-ratio($color, white);
+    $contrast-ratio-white: $contrast-ratio;
+  }
+
+  @include set-contrast-ratio-black();
+  @include set-contrast-ratio-white();
+
+  @mixin set-scheme-type() when ($contrast-ratio-black > 7) {
+    $scheme-type: light;
+  }
+
+  @mixin set-scheme-type() when ($contrast-ratio-white > 7) {
+    $scheme-type: dark;
+  }
+
+  @mixin set-scheme-type() when (default()) {
+    $scheme-type: medium;
+  }
+  @include set-scheme-type();
+}
+
+
+@mixin set-a-color($color, $compare: $color) {
+
+  // a lighter version of the color
+  // $color1a, $color3a etc are examples of a-colors
+
+  $iterations: 10;
+
+  @mixin settings() when ($scheme-type = light) {
+    $contrast-standard: 1.1;
+    $initial-lighten: 1%;
+  }
+
+  @mixin settings() when ($scheme-type = dark) {
+    $contrast-standard: 1.1;
+    $initial-lighten: 2.5%;
+  }
+
+  @mixin settings() when (default()) {
+    $contrast-standard: 1.25;
+    $initial-lighten: 5%;
+  }
+
+  @mixin set-a($a, $contrast-ratio, $index) when ($index <= $iterations)
+                                       and ($contrast-ratio < $contrast-standard)
+                                       and (luma($a) < 90%) {
+    // loop through this until $contrast-standard is met
+    $new-a: lighten($a, 3.5%);
+    @include set-contrast-ratio($color, $new-a);
+    @include set-a($new-a, $contrast-ratio, $index + 1);
+  }
+
+  @mixin set-a($a, $contrast-ratio, $index) when (default()) {
+    // set $a-color when conditions are finally met (or iterations run out)
+    $a-color: $a;
+  }
+
+  // load settings
+  @include settings();
+
+  // grab a couple near analogs and figure out which is closer
+  .set-closer-farther($compare; adjust-hue($color, $analog/2); adjust-hue($color, -$analog/2));
+
+  // use the closer color as base for a-color
+  @include set-a(lighten($closer, $initial-lighten), 1, 1);
+}
+
+.set-b-color($color; $compare: $base-color; $nearness: $analog;) {
+
+  // a similar luma alternate
+
+  // grab both nearby analogs
+  $b1: adjust-hue($color, $nearness);
+  $b2: adjust-hue($color, -$nearness);
+
+  // use whichever is closer to the original
+  .set-closer-farther($color; $b1; $b2;);
+  $b-base: $closer;
+
+  // adjust b's luma to match
+  .set-lumafix($b-base; $color;);
+  $b-color: $lumafix;
+}
+
+@mixin set-c-color($color, $compare: $color, $scheme: $scheme-type) {
+
+  $iterations: 10;
+
+  // a darker version of the color
+
+  @mixin settings() when ($scheme = light) {
+    $contrast-standard: 1.1;
+    $initial-darken: 1%;
+  }
+
+  @mixin settings() when ($scheme = dark) {
+    $contrast-standard: 1.1;
+    $initial-darken: 2.5%;
+  }
+
+  @mixin settings() when (default()) {
+    $contrast-standard: 1.25;
+    $initial-darken: 5%;
+  }
+
+  @mixin set-c($c, $contrast-ratio, $index) when ($index <= $iterations)
+                                       and ($contrast-ratio < $contrast-standard) {
+    $new-c: darken($c, 2%);
+    @include set-contrast-ratio($color, $new-c);
+    @include set-c($new-c, $contrast-ratio, $index + 1);
+  }
+
+  @mixin set-c($c, $contrast-ratio, $index) when (default()) {
+    $c-color: $c;
+  }
+
+  $initial-c: darken($color, $initial-darken);
+
+  @include settings();
+  @include set-contrast-ratio($color, $initial-c);
+  .set-closer-farther($compare; adjust-hue($initial-c, $analog/2); adjust-hue($initial-c, -$analog/2));
+  @include set-c($initial-c, $contrast-ratio, 1);
+}
+
+@mixin make-color1($color) {
+  $color1: $color;
+}
+
+.make-color2($color; $wheel) {
+  .set-lumafix(adjust-hue($color, extract($wheel, 1)););
+  $color2: $lumafix;
+}
+
+.make-color3($color; $wheel) {
+  .set-lumafix(adjust-hue($color, extract($wheel, 2)););
+  $color3: $lumafix;
+}
+
+.make-color4($color; $wheel) {
+  .set-lumafix(adjust-hue($color, extract($wheel, 3)););
+  $color4: $lumafix;
+}
+
+.make-subcolors($c1; $c2; $c3; $c4; $scheme-type) {
+
+  @mixin make-color1a() {
+    @include set-a-color($c1);
+    $color1a: $a-color;
+  }.make-color1a();
+
+  @mixin make-color1b() {
+    @include set-b-color($c1);
+    $color1b: $b-color;
+  }.make-color1b();
+
+  @mixin make-color1c() {
+    @include set-c-color($c1);
+    $color1c: $c-color;
+  }.make-color1c();
+
+  @mixin make-color2a() {
+    @include set-a-color($c2);
+    .set-lumafix($a-color; $color1a;);
+    $color2a: $lumafix;
+  }.make-color2a();
+
+  @mixin make-color2b() {
+    @include set-b-color($c2);
+    $color2b: $b-color;
+  }.make-color2b();
+
+  @mixin make-color2c() {
+    @include set-c-color($c2);
+    .set-lumafix($c-color; $color1c;);
+    $color2c: $lumafix;
+  }.make-color2c();
+
+  @mixin make-color3a() {
+    @include set-a-color($c3);
+    .set-lumafix($a-color; $color1a;);
+    $color3a: $lumafix;
+  }.make-color3a();
+
+  @mixin make-color3b() {
+    @include set-b-color($c3);
+    $color3b: $b-color;
+  }.make-color3b();
+
+  @mixin make-color3c() {
+    @include set-c-color($c3);
+    .set-lumafix($c-color; $color1c;);
+    $color3c: $lumafix;
+  }.make-color3c();
+
+  @mixin make-color4a() {
+    @include set-a-color($c4);
+    .set-lumafix($a-color; $color1a;);
+    $color4a: $lumafix;
+  }.make-color4a();
+
+  @mixin make-color4b() {
+    @include set-b-color($c4);
+    $color4b: $b-color;
+  }.make-color4b();
+
+  @mixin make-color4c() {
+    @include set-c-color($c4);
+    .set-lumafix($c-color; $color1c;);
+    $color4c: $lumafix;
+  }.make-color4c();
+}
+
+@mixin make-semantic-colors() {
+
+  .set-action-midpoint() {
+    $action-midpoint-base: average($success-base, $info-base);
+    @include set-lumafix($action-midpoint-base);
+    $action-midpoint: $lumafix;
+  }
+
+  @mixin set-reaction-midpoint() {
+    $reaction-midpoint-base: average($warning-base, $failure-base);
+    @include set-lumafix($reaction-midpoint-base);
+    $reaction-midpoint: $lumafix;
+  }
+
+  @include set-action-midpoint();
+  @include set-reaction-midpoint();
+
+  @mixin set-info() {
+    .set-lumafix($info-base; $base-color;);
+    $info: mix($lumafix, $info-base, 75%);
+  }
+
+  @mixin set-warning() {
+    .set-lumafix($warning-base; $base-color;);
+    $warning: mix($lumafix, $warning-base, 35%);
+  }
+
+  @mixin set-success() {
+    .set-lumafix($success-base; $base-color;);
+    $success: mix($lumafix, $success-base, 50%);
+  }
+
+  @mixin set-failure() {
+    .set-lumafix($failure-base; $base-color;);
+    $failure: mix($lumafix, $failure-base, 20%);
+  }
+
+  @mixin set-action() {
+    @include set-closer-farther($action-midpoint, $color1b, $color3);
+    .set-average($info, $warning, $failure, $success;);
+    @include set-lumafix($closer, $average);
+    $action: $lumafix;
+  }
+
+  @mixin set-reaction() {
+    @include set-closer-farther($reaction-midpoint, $color2, $color4);
+    .set-average($info, $warning, $failure, $success;);
+    @include set-lumafix($closer, $average);
+    $reaction: $lumafix;
+  }
+
+  @include set-info();
+  @include set-warning();
+  @include set-success();
+  @include set-failure();
+  @include set-action();
+  @include set-reaction();
+}
+
+@mixin make-grays($color, $scheme-type) {
+  $gray-base: mix(desaturate($color, 80%), #515151, 75%);
+  $gray-step: 12.5%;
+
+  $gray-bases:  $gray-lightest-base,
+                $gray-lighter-base,
+                $gray-light-base,
+                $gray-base,
+                $gray-dark-base,
+                $gray-darker-base,
+                $gray-darkest-base,
+                darken($gray-darkest-base, 3%); // placeholder for overflow
+
+  $gray-light-base:             lighten($gray-base; $gray-step);
+  $gray-lighter-base:           lighten($gray-base; $gray-step*2);
+  $gray-lightest-base:          lighten($gray-base; $gray-step*4);
+
+  $gray-dark-base:              darken($gray-base; $gray-step);
+  $gray-darker-base:            darken($gray-base; $gray-step*2);
+  $gray-darkest-base:           darken($gray-base; $gray-step*4);
+
+  @mixin set-gray-shift() when ($scheme-type = light) {
+    $gray-shift: 3;
+  }
+
+  @mixin set-gray-shift() when (default()) {
+    $gray-shift: 2;
+  }
+
+  @mixin set-gray-shift() when ($scheme-type = dark) {
+    $gray-shift: 1;
+  }
+
+  @include set-gray-shift();
+
+  $gray-lighter:      extract($gray-bases; 0 + $gray-shift);
+  $gray-light:        extract($gray-bases; 1 + $gray-shift);
+  $gray:              extract($gray-bases; 2 + $gray-shift);
+  $gray-dark:         extract($gray-bases; 3 + $gray-shift);
+  $gray-darker:       extract($gray-bases; 4 + $gray-shift);
+}

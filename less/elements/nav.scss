@@ -1,0 +1,112 @@
+nav {
+  $color: $color1a;
+  $height: $nav-height;
+
+  &:extend(section all);
+
+  height: $height;
+  max-height: $height;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: hidden;
+  z-index: 10;
+
+  & when ($sticky-nav = true) {
+    margin-bottom: 0;
+    position: fixed; top: 0; left: 0;
+    width: 100%;
+    border-radius: 0;
+  }
+
+  & when not ($sticky-nav = true) {
+    @include border-radius();
+  }
+
+  > ul {
+    float: right;
+    line-height: $height;
+    padding-left: 0;
+    margin-bottom: 0;
+
+    > li {
+      float:left;
+      list-style: none;
+      margin: 0;
+
+      a {
+        display: block;
+        color: inherit;
+        padding-left: $padding;
+        padding-right: $padding;
+      }
+    }
+
+    .on-desktop({
+      min-width: $aside-width;
+    });
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  h1 {
+    display: block;
+    float: left;
+    margin-top: 0;
+    font-size: floor($font-size*1.6);
+    line-height: $height;
+    padding: 0;
+    color: inherit;
+  }
+
+  @include set-yellow-distance($color);
+  @include set-lemon-distance($color);
+  @include set-orange-distance($color);
+  @include set-mid-yellow-distance($color);
+  @include nav-color();
+
+  @include no-user-select();
+}
+
+@mixin set-yellow-distance($color) {
+  @include set-distance($color, yellow);
+  $yellow-distance: $distance;
+}
+
+@mixin set-orange-distance($color) {
+  @include set-distance($color, orange);
+  $orange-distance: $distance;
+}
+
+@mixin set-lemon-distance($color) {
+  @include set-distance($color, LemonChiffon);
+  $lemon-distance: $distance;
+}
+
+@mixin set-mid-yellow-distance($color) {
+  @include set-distance($color, #E6EB6A);
+  $mid-yellow-distance: $distance;
+}
+
+@mixin nav-color() when ($orange-distance < 175),
+                  ($yellow-distance < 100),
+                  ($mid-yellow-distance < 100),
+                  ($lemon-distance < 50) {
+  // orange and yellow lose theme cohesion when darkened
+  // keep them as bg and shade text
+  background: $color;
+  @include contrast-text-against($color);
+
+  li a:active {
+    @include colorize(darken($color, 5%));
+  }
+}
+
+@mixin nav-color() when (default()) {
+  .invert-text-against($color; $contrast-standard: 3;);
+
+  li a:active {
+    .invert-text-against($color; $contrast-standard: 3; $button: true;);
+  }
+}

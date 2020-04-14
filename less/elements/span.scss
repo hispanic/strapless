@@ -1,0 +1,39 @@
+span {
+
+  &.padding {
+    padding: .18em $padding/2 .22em $padding/2;
+  }
+
+  .semantic-classes({
+    padding: .18em $padding/2 .22em $padding/2;
+  });
+
+  @include make-spans-for($semantic-colors);
+}
+
+@mixin span-color($color) when ($scheme-type = light) {
+  @include set-c-color($color);
+  @include colorize($c-color);
+}
+
+@mixin span-color($color) when ($scheme-type = dark) {
+  @include set-a-color($color);
+  @include colorize($a-color);
+}
+
+@mixin make-spans-for($colors) when ($scheme-type = dark), ($scheme-type = light) {
+  // make spans for a list of color variable names
+
+  $length: length($colors);
+
+  @include make-span();
+
+  @mixin make-span($index:1) when ($index <= $length) {
+    $color-name: extract($colors, $index);
+    $color: $$color-name;
+
+    &.#{$color-name} { .span-color($color);}
+
+    @include make-span($index + 1);
+  }
+}
