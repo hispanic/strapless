@@ -1,8 +1,0 @@
-img {
-  @include margin-bottom();
-
-  .semantic-classes({
-    padding: $padding;
-    border-radius: $border-radius/2;
-  });
-}
