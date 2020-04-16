@@ -136,6 +136,16 @@
 
     .color-name(@color-name);
 
+    // Declare a custom property (CSS variable) for each generated color, which allows us to refer 
+    // to the colors in CSS declarations, like so: 
+    //  color: var(--color1); 
+    // More info - https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties
+    // :root represents the <html> element. Placement here will, unfortunately, result in the 
+    // creation of lots of individual rule sets for :root. Sorry for the clutter.
+    :root {
+      --@{color-name}: @this-color;
+    }
+
     .make-color-class(@index + 1);
   }
 }
