@@ -1,16 +1,16 @@
 {
-  "name": "strapless",
-  "version": "2.0.0",
-  "description": "A color-changing CSS boilerplate and powerful LessCSS library for colors and patterns",
+  "name": "strapless-mhs",
+  "version": "1.0.0",
+  "description": "A custom fork of Strapless (color-changing CSS boilerplate and powerful LessCSS library for colors and patterns)",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tivix/strapless.git"
+    "url": "git+https://github.com/hispanic/strapless-mhs.git"
   },
-  "author": "Rex Riepe, Adam Lord",
+  "author": "Michael Harry Scepaniak",
   "license": "MIT",
   "keywords": [
     "css",
@@ -20,10 +20,13 @@
     "reset"
   ],
   "bugs": {
-    "url": "https://github.com/Tivix/strapless/issues"
+    "url": "https://github.com/hispanic/strapless-mhs/issues"
   },
-  "homepage": "https://github.com/Tivix/strapless",
+  "homepage": "https://github.com/hispanic/strapless-mhs",
+  "assets": [
+    "css/strapless-f37d0b.css"
+  ],
   "dependencies": {
-    "less": "^2.7.2"
+    "less": "2.7.2"
   }
 }
