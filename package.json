@@ -23,6 +23,9 @@
     "url": "https://github.com/hispanic/strapless-mhs/issues"
   },
   "homepage": "https://github.com/hispanic/strapless-mhs",
+  "assets": [
+    "css/strapless-f37d0b.css"
+  ],
   "dependencies": {
     "less": "2.7.2"
   }
